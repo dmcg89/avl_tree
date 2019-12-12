@@ -8,6 +8,7 @@ class BinaryTreeNode(object):
     def __init__(self, data):
         """Initialize this binary tree node with the given data."""
         self.data = data
+        # self.height = 0
         self.left = None
         self.right = None
 
@@ -35,13 +36,16 @@ class BinaryTreeNode(object):
         Best and worst case running time: O(log(n)) if tree is balanced.  O(n) if tree is unbalanced"""
         #  Check if left child has a value and if so calculate its height
         height_left = 0
-        if self.left: height_left = 1 + self.left.height()
+        print(self.data, self.left,self.right)
+        if self.left:
+            height_left = 1 + self.left.height()
 
         #  Check if right child has a value and if so calculate its height
         height_right =  0
-        if self.right: height_right = 1 + self.right.height()
+        if self.right:
+            height_right = 1 + self.right.height()
 
-        # Return one more than the greater of the left height and right height
+        # self.height = max(height_left, height_right)
         return max(height_left, height_right)
 
 
@@ -120,31 +124,22 @@ class BinarySearchTree(object):
         self.size += 1
     
     def _find_balance(self, item):
-      """Find balance factor of a given node item"""
-      node = self._find_node_iterative(item)
-      balance = 0
-      left_child, right_child = node.left, node.right
-
-      # base case, item is root
-      if left_child is None and right_child is None:
-        return 0
-
-      elif left_child or right_child:
-        print('here')
-        if left_child: balance = left_child.height()
-        elif right_child: balance = right_child.height()
-
-      elif left_child and right_child:
-        balance = left_child.height() - right_child.height()
-
-      return balance
+        """Find balance factor of a given node item"""
+        node = self._find_node_iterative(item)
+        print("balance node",node)
+    #   left_child, right_child = node.left, node.right
+        left_child_h, right_child_h = 0, 0
+        # base case, item is root
+        print("left",node.left)
+        print("right",node.right)
+        if node.left: left_child_h = node.left.height() + 1
+        if node.right: right_child_h = node.right.height() + 1
+        return left_child_h - right_child_h
 
     def _find_node_iterative(self, item):
         """Return the node containing the given item in this binary search tree,
         or None if the given item is not found. Search is performed iteratively
-        starting from the root node.
-        TODO: Best case running time: ??? under what conditions?
-        TODO: Worst case running time: ??? under what conditions?"""
+        starting from the root node."""
         # Start with the root node
         node = self.root
         # Loop until we descend past the closest leaf node
@@ -479,35 +474,35 @@ def test_binary_search_tree():
     # items = [2, 1, 3]
     # items = [4, 2, 6, 1, 3, 5, 7]
     # items = [8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15]
-    items = [8, 7, 6, 5 ,4, 3]
-    print('items: {}'.format(items))
+    items = [3, 2, 1]
+    # print('items: {}'.format(items))
 
     tree = BinarySearchTree()
-    print('tree: {}'.format(tree))
-    print('root: {}'.format(tree.root))
+    # print('tree: {}'.format(tree))
+    # print('root: {}'.format(tree.root))
 
     print('\nInserting items:')
     for item in items:
         tree.insert(item)
-        print('insert({}), size: {}'.format(item, tree.size))
-    print('root: {}'.format(tree.root))
+        # print('insert({}), size: {}'.format(item, tree.size))
+    # print('root: {}'.format(tree.root))
 
     for item in items:
       print('item({}), balance: {}'.format(item, tree._find_balance(item)))
 
-    print('\nSearching for items:')
-    for item in items:
-        result = tree.search(item)
-        print('search({}): {}'.format(item, result))
-    item = 123
-    result = tree.search(item)
-    print('search({}): {}'.format(item, result))
+    # print('\nSearching for items:')
+    # for item in items:
+    #     result = tree.search(item)
+    #     print('search({}): {}'.format(item, result))
+    # item = 123
+    # result = tree.search(item)
+    # print('search({}): {}'.format(item, result))
 
-    print('\nTraversing items:')
-    print('items in-order:    {}'.format(tree.items_in_order()))
-    print('items pre-order:   {}'.format(tree.items_pre_order()))
-    print('items post-order:  {}'.format(tree.items_post_order()))
-    print('items level-order: {}'.format(tree.items_level_order()))
+    # print('\nTraversing items:')
+    # print('items in-order:    {}'.format(tree.items_in_order()))
+    # print('items pre-order:   {}'.format(tree.items_pre_order()))
+    # print('items post-order:  {}'.format(tree.items_post_order()))
+    # print('items level-order: {}'.format(tree.items_level_order()))
 
 
 if __name__ == '__main__':
