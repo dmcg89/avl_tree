@@ -8,7 +8,7 @@ class BinaryTreeNode(object):
     def __init__(self, data):
         """Initialize this binary tree node with the given data."""
         self.data = data
-        # self.height = 0
+        self.height = 0
         self.left = None
         self.right = None
 
@@ -47,6 +47,15 @@ class BinaryTreeNode(object):
 
         # self.height = max(height_left, height_right)
         return max(height_left, height_right)
+
+    def _find_balance(self):
+        """Find balance factor of a given node item"""
+        left_child_h, right_child_h = 0, 0
+        print("left",self.left)
+        print("right",self.right)
+        if self.left: left_child_h = self.left.height + 1
+        if self.right: right_child_h = self.right.height + 1
+        return left_child_h - right_child_h
 
 
 class BinarySearchTree(object):
@@ -96,7 +105,7 @@ class BinarySearchTree(object):
         # node = self._find_node_iterative(item)
         #  Return the node's data if found, or None
         return node.data if node else None
-        
+
 
     def insert(self, item):
         """Insert the given item in order into this binary search tree.
@@ -109,32 +118,103 @@ class BinarySearchTree(object):
             #  Increase the tree size
             self.size += 1
             return
-        # Find the parent node of where the given item should be inserted
-        parent = self._find_parent_node_recursive(item, self.root)
-        # parent = self._find_parent_node_iterative(item)
-        #  Check if the given item should be inserted left of parent node
-        if item < parent.data:
-            #  Create a new node and set the parent's left child
-            parent.left = BinaryTreeNode(item)
-        #  Check if the given item should be inserted right of parent node
-        elif item > parent.data:
-            #  Create a new node and set the parent's right child
-            parent.right = BinaryTreeNode(item)
-        #  Increase the tree size
+
+        self._insert(item, self.root)
         self.size += 1
-    
-    def _find_balance(self, item):
-        """Find balance factor of a given node item"""
-        node = self._find_node_iterative(item)
-        print("balance node",node)
-    #   left_child, right_child = node.left, node.right
-        left_child_h, right_child_h = 0, 0
-        # base case, item is root
-        print("left",node.left)
-        print("right",node.right)
-        if node.left: left_child_h = node.left.height() + 1
-        if node.right: right_child_h = node.right.height() + 1
-        return left_child_h - right_child_h
+
+    def _insert(self, item, node):
+
+        print("item", item, "compared to",node.data)
+        # check if item being inserted is greater than node data
+        if item > node.data:
+            # if right exists move to right node
+            if node.right:
+                self._insert(item, node.right)
+                left_height = node.left.height if node.left else 0
+                right_height = node.right.height if node.right else 0
+                node.height = max(left_height, right_height) + 1
+                self.check_balance(node)
+                #left_height = node.left.height if node.left else 0
+                #right_height = node.right.height if node.right else 0
+                #node.height = max(right_height, left_height) + 1
+            # add new node in empty spot
+            else:
+                node.right = BinaryTreeNode(item)
+                node.height = max(node.height, 1)
+        else:
+            if node.left:
+                self._insert(item, node.left)
+                left_height = node.left.height if node.left else 0
+                right_height = node.right.height if node.right else 0
+                node.height = max(left_height, right_height) + 1
+                self.check_balance(node)
+                #left_height = node.left.height if node.left else 0
+                #right_height = node.right.height if node.right else 0
+                #node.height = max(right_height, left_height) + 1
+            else:
+                node.left = BinaryTreeNode(item)
+                node.height = max(node.height, 1)
+
+    def check_balance(self, node):
+
+        left_height = node.left.height if node.left else -1
+        right_height = node.right.height if node.right else -1
+        print("current node:",node)
+        print("current node height", node.height)
+        print("left height",left_height)
+        print("right_height", right_height)
+        # check if right rotaiton is needed
+        if left_height - right_height >= 2:
+            if node.left._find_balance() < 0:
+                pass
+                #left then right
+            else:
+                print("rotating left")
+                parent_node = self._find_parent_node_iterative(node.data)
+                child_node = node.left
+                self._rotate_left(parent_node, node, child_node)
+                return
+
+        elif left_height - right_height <= -2:
+            print("left height minus right height is less than -2")
+            if node.right._find_balance() > 0:
+                pass
+                # right then left
+            else:
+                print("rotating right")
+                print("node",node)
+                parent_node = self._find_parent_node_iterative(node.data)
+                print("parent", parent_node)
+                child_node = node.right
+                print("child", child_node)
+                self._rotate_right(parent_node, node, child_node)
+                return
+
+    def _rotate_left(self, parent, node, child):
+
+        print("parent:", parent)
+        print("node:", node)
+        print("child:", child)
+        parent.left = child
+        child.right = node
+        node.left = None
+        node.height -= 2
+        return
+
+    def _rotate_right(self, parent, node, child):
+
+        print("function to rotate")
+        print("parent:", parent)
+        print("node:", node)
+        print("child:", child)
+        parent.right = child
+        child.left = node
+        node.right = None
+        node.height -= 2
+        print("parent height:", parent.height)
+        print("node height:", node.height)
+        print("child height:", child.height)
+        return
 
     def _find_node_iterative(self, item):
         """Return the node containing the given item in this binary search tree,
@@ -243,10 +323,10 @@ class BinarySearchTree(object):
         # item doesnt exist
         if not self.contains(item):
             raise ValueError('Given item not in tree')
-        
-        
+
+
         node = self._find_node_recursive(item, self.root)          # Find Node to be deleted
-        
+
         parent = self._find_parent_node_recursive(item, node)      # Find Parent of node to delete
 
         # Node is a leaf
@@ -256,7 +336,7 @@ class BinarySearchTree(object):
                 parent.left = None
             elif parent.right == node:                              # If node is right child, remove pointer
                 parent.right = None
-                
+
         # Node to delete has one child
         if node.left == None or node.right == None:
             node.data = None                                        # Remove data from node
@@ -287,7 +367,7 @@ class BinarySearchTree(object):
                 if node == parent.right:
                     parent.right.data = successor.data
                 successor_parent = self._find_parent_node_recursive(successor.data, successor)
-                successor_parent.left = None                   
+                successor_parent.left = None
             else:
                 self.root.data = successor.data
 
@@ -317,8 +397,8 @@ class BinarySearchTree(object):
             visit(node.data)
         #  Traverse right subtree, if it exists
             self._traverse_in_order_recursive(node.right, visit)
-        
-        
+
+
 
     def _traverse_in_order_iterative(self, node, visit):
         """Traverse this binary tree with iterative in-order traversal (DFS).
@@ -342,7 +422,7 @@ class BinarySearchTree(object):
             else:
                 stack.push(node)
                 node = node.left
-                
+
 
 
 
@@ -393,7 +473,7 @@ class BinarySearchTree(object):
                 stack.push(node.right)
             if node.left:
                 stack.push(node.left)
-            
+
 
     def items_post_order(self):
         """Return a post-order list of all items in this binary search tree."""
@@ -474,7 +554,8 @@ def test_binary_search_tree():
     # items = [2, 1, 3]
     # items = [4, 2, 6, 1, 3, 5, 7]
     # items = [8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15]
-    items = [3, 2, 1]
+    #items = [15,9,20,21,22]
+    items = [15,9,18,6,5]
     # print('items: {}'.format(items))
 
     tree = BinarySearchTree()
@@ -483,12 +564,10 @@ def test_binary_search_tree():
 
     print('\nInserting items:')
     for item in items:
+        print("inserting",item)
         tree.insert(item)
         # print('insert({}), size: {}'.format(item, tree.size))
     # print('root: {}'.format(tree.root))
-
-    for item in items:
-      print('item({}), balance: {}'.format(item, tree._find_balance(item)))
 
     # print('\nSearching for items:')
     # for item in items:
@@ -498,11 +577,35 @@ def test_binary_search_tree():
     # result = tree.search(item)
     # print('search({}): {}'.format(item, result))
 
-    # print('\nTraversing items:')
-    # print('items in-order:    {}'.format(tree.items_in_order()))
+    print('\nTraversing items:')
+    print('items in-order:    {}'.format(tree.items_in_order()))
     # print('items pre-order:   {}'.format(tree.items_pre_order()))
     # print('items post-order:  {}'.format(tree.items_post_order()))
-    # print('items level-order: {}'.format(tree.items_level_order()))
+    print('items level-order: {}'.format(tree.items_level_order()))
+
+    print(tree.root)
+    print(tree.root.left)
+    print(tree.root.right)
+    print(tree.root.left.left)
+    print(tree.root.left.right)
+
+    print(tree.root.height)
+    print(tree.root.left.height)
+    print(tree.root.right.height)
+    print(tree.root.left.left.height)
+    print(tree.root.left.right.height)
+
+    '''print(tree.root)
+    print(tree.root.left)
+    print(tree.root.right)
+    print(tree.root.right.left)
+    print(tree.root.right.right)
+
+    print(tree.root.height)
+    print(tree.root.left.height)
+    print(tree.root.right.height)
+    print(tree.root.right.left.height)
+    print(tree.root.right.right.height)'''
 
 
 if __name__ == '__main__':
