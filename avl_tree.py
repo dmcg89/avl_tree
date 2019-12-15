@@ -8,12 +8,12 @@ from stack import LinkedStack
 from linkedlist import LinkedList
 import numpy as np
 
-class node(object):
+class AVLNode(object):
 
     def __init__(self, data):
         """Initialize this binary tree node with the given data."""
         self.data = data
-        self.height = 1
+        self.height = 0
         self.left_child = None
         self.right_child = None
         self.parent = None
@@ -60,31 +60,31 @@ class AVLSearchTree(object):
     def _contains(self, data, cur_node):
         if data == cur_node.data: return True
 
-        elif data<cur_node.data and cur_node.left:
+        elif data < cur_node.data and cur_node.left_child:
             return self._contains(data, cur_node.left_child)
 
-        elif data > cur_node.data and cur_node.right:
-            return self._contains(data,cur_node.right_child)
+        elif data > cur_node.data and cur_node.right_child:
+            return self._contains(data, cur_node.right_child)
         return False 
 
     def insert(self, data):
         if self.root == None:
-            self.root = node(data)
+            self.root = AVLNode(data)
         else:
             self._insert(data ,self.root)
 
     def _insert(self, data, cur_node):
         """Recursively add new node to appropriate place in tree"""
         if data < cur_node.data:
-            if cur_node.left_child==None:
-                cur_node.left_child=node(data)
+            if cur_node.left_child == None:
+                cur_node.left_child = AVLNode(data)
                 cur_node.left_child.parent=cur_node # set parent
                 self._check_balance(cur_node.left_child)
             else:
                 self._insert(data, cur_node.left_child)
         elif data > cur_node.data:
             if cur_node.right_child == None:
-                cur_node.right_child = node(data)
+                cur_node.right_child = AVLNode(data)
                 cur_node.right_child.parent = cur_node # set parent
                 self._check_balance(cur_node.right_child)
             else:
@@ -96,7 +96,7 @@ class AVLSearchTree(object):
         if cur_node.parent==None: return
         path = [cur_node] + path
         # path.append(cur_node)
-        print(path)
+        # print(path)
 
         left_height =self.get_height(cur_node.parent.left_child)
         right_height=self.get_height(cur_node.parent.right_child)
@@ -123,17 +123,15 @@ class AVLSearchTree(object):
         elif y == z.right_child and x == y.left_child:
             self._right_rotate(y)
             self._left_rotate(z)
-        else:
-            raise Exception('_rebalance_node: z,y,x node configuration not recognized!')
 
-    def _right_rotate(self,z):
+    def _right_rotate(self, z):
         sub_root = z.parent 
         y = z.left_child
         t3 = y.right_child
         y.right_child = z
         z.parent = y
         z.left_child = t3
-        if t3 != None: t3.parent=z
+        if t3: t3.parent=z
         y.parent = sub_root
         if y.parent == None:
                 self.root = y
@@ -142,8 +140,8 @@ class AVLSearchTree(object):
                 y.parent.left_child = y
             else:
                 y.parent.right_child = y
-        z.height = 1+max(self.get_height(z.left_child), self.get_height(z.right_child))
-        y.height=1+max(self.get_height(y.left_child), self.get_height(y.right_child))
+        z.height = 1 + max(self.get_height(z.left_child), self.get_height(z.right_child))
+        y.height = 1 + max(self.get_height(y.left_child), self.get_height(y.right_child))
 
     def _left_rotate(self,z):
         sub_root = z.parent 
@@ -152,7 +150,7 @@ class AVLSearchTree(object):
         y.left_child = z
         z.parent = y
         z.right_child = t2
-        if t2 != None: t2.parent = z
+        if t2: t2.parent = z
         y.parent = sub_root
         if y.parent == None: 
             self.root = y
@@ -161,11 +159,11 @@ class AVLSearchTree(object):
                 y.parent.left_child = y
             else:
                 y.parent.right_child = y
-        z.height=1+max(self.get_height(z.left_child), self.get_height(z.right_child))
-        y.height=1+max(self.get_height(y.left_child), self.get_height(y.right_child))
+        z.height= 1 + max(self.get_height(z.left_child), self.get_height(z.right_child))
+        y.height= 1 + max(self.get_height(y.left_child), self.get_height(y.right_child))
 
     def get_height(self,cur_node):
-        if cur_node==None: return 0
+        if cur_node == None: return 0
         return cur_node.height
 
     def items_in_order(self):
@@ -219,8 +217,8 @@ class AVLSearchTree(object):
 
         if node is not None:
             visit(node.data)                                        #  Visit this node's data with given function
-            self._traverse_pre_order_recursive(node.left, visit)    #  Traverse left subtree, if it exists
-            self._traverse_pre_order_recursive(node.right, visit)   #  Traverse right subtree, if it exists
+            self._traverse_pre_order_recursive(node.left_child, visit)    #  Traverse left subtree, if it exists
+            self._traverse_pre_order_recursive(node.right_child, visit)   #  Traverse right subtree, if it exists
 
 
     def items_level_order(self):
