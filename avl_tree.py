@@ -1,383 +1,180 @@
 #!python
+
+"""Credit: Alan Davis CS1.3 Binary Search Tree starter code
+           AVL Tutorial: https://www.youtube.com/watch?v=lxHF-mVdwK8"""
+
 from queue import LinkedQueue
 from stack import LinkedStack
 from linkedlist import LinkedList
+import numpy as np
 
-class BinaryTreeNode(object):
+class node(object):
 
     def __init__(self, data):
         """Initialize this binary tree node with the given data."""
         self.data = data
-        self.height = 0
-        self.left = None
-        self.right = None
+        self.height = 1
+        self.left_child = None
+        self.right_child = None
+        self.parent = None
 
     def __repr__(self):
         """Return a string representation of this binary tree node."""
-        return 'BinaryTreeNode({!r})'.format(self.data)
-
-    def is_leaf(self):
-        """Return True if this node is a leaf (has no children)."""
-        #  Check if both left child and right child have no value
-
-        return self.left is None and self.right is None
-
-    def is_branch(self):
-        """Return True if this node is a branch (has at least one child)."""
-        #  Check if either left child or right child has a value
-        has_left_child = self.left is not None
-        has_right_child = self.right is not None
-        return has_left_child or has_right_child
-        # return True if self.left is not None or self.right is not None else False
-
-    def height(self):
-        """Return the height of this node (the number of edges on the longest
-        downward path from this node to a descendant leaf node).
-        Best and worst case running time: O(log(n)) if tree is balanced.  O(n) if tree is unbalanced"""
-        #  Check if left child has a value and if so calculate its height
-        height_left = 0
-        print(self.data, self.left,self.right)
-        if self.left:
-            height_left = 1 + self.left.height()
-
-        #  Check if right child has a value and if so calculate its height
-        height_right =  0
-        if self.right:
-            height_right = 1 + self.right.height()
-
-        # self.height = max(height_left, height_right)
-        return max(height_left, height_right)
-
-    def _find_balance(self):
-        """Find balance factor of a given node item"""
-        left_child_h, right_child_h = 0, 0
-        print("left",self.left)
-        print("right",self.right)
-        if self.left: left_child_h = self.left.height + 1
-        if self.right: right_child_h = self.right.height + 1
-        return left_child_h - right_child_h
+        return 'AVLNode({!r})'.format(self.data)
 
 
-class BinarySearchTree(object):
+class AVLSearchTree(object):
 
     def __init__(self, items=None):
         """Initialize this binary search tree and insert the given items."""
         self.root = None
-        self.size = 0
         if items is not None:
             for item in items:
                 self.insert(item)
-
-    def __repr__(self):
-        """Return a string representation of this binary search tree."""
-        return 'BinarySearchTree({} nodes)'.format(self.size)
 
     def is_empty(self):
         """Return True if this binary search tree is empty (has no nodes)."""
         return self.root is None
 
     def height(self):
-        """Return the height of this tree (the number of edges on the longest
-        downward path from this tree's root node to a descendant leaf node).
-        TODO: Best and worst case running time: ??? under what conditions?"""
-        #  Check if root node has a value and if so calculate its height
         if self.root:
-            node = self.root
-        return node.height()
+            return self._height(self.root, 0)
+        else:
+            return 0
 
-    def contains(self, item):
-        """Return True if this binary search tree contains the given item.
-        TODO: Best case running time: ??? under what conditions?
-        TODO: Worst case running time: ??? under what conditions?"""
-        # Find a node with the given item, if any
-        node = self._find_node_recursive(item, self.root)
-        # Return True if a node was found, or False
-        return node is not None
+    def _height(self, cur_node,  cur_height):
+        if cur_node == None: return cur_height
 
+        left_height = self._height(cur_node.left, cur_height + 1)
+        right_height = self._height(cur_node.right, cur_height + 1)
 
-    def search(self, item):
-        """Return an item in this binary search tree matching the given item,
-        or None if the given item is not found.
-        TODO: Best case running time: ??? under what conditions?
-        TODO: Worst case running time: ??? under what conditions?"""
-        # Find a node with the given item, if any
-        node = self._find_node_recursive(item, self.root)
-        # node = self._find_node_iterative(item)
-        #  Return the node's data if found, or None
-        return node.data if node else None
+        return max(left_height,right_height)
 
+    def contains(self, data):
+        """Returns true if node exists in tree"""
+        if self.root:
+            return self._contains(data, self.root)
+        else:
+            return False
 
-    def insert(self, item):
-        """Insert the given item in order into this binary search tree.
-        TODO: Best case running time: ??? under what conditions?
-        TODO: Worst case running time: ??? under what conditions?"""
-        # Handle the case where the tree is empty
-        if self.is_empty():
-            #  Create a new root node
-            self.root = BinaryTreeNode(item)
-            #  Increase the tree size
-            self.size += 1
+    def _contains(self, data, cur_node):
+        if data == cur_node.data: return True
+
+        elif data<cur_node.data and cur_node.left:
+            return self._contains(data, cur_node.left_child)
+
+        elif data > cur_node.data and cur_node.right:
+            return self._contains(data,cur_node.right_child)
+        return False 
+
+    def insert(self, data):
+        if self.root == None:
+            self.root = node(data)
+        else:
+            self._insert(data ,self.root)
+
+    def _insert(self, data, cur_node):
+        """Recursively add new node to appropriate place in tree"""
+        if data < cur_node.data:
+            if cur_node.left_child==None:
+                cur_node.left_child=node(data)
+                cur_node.left_child.parent=cur_node # set parent
+                self._check_balance(cur_node.left_child)
+            else:
+                self._insert(data, cur_node.left_child)
+        elif data > cur_node.data:
+            if cur_node.right_child == None:
+                cur_node.right_child = node(data)
+                cur_node.right_child.parent = cur_node # set parent
+                self._check_balance(cur_node.right_child)
+            else:
+                self._insert(data,cur_node.right_child)
+        else:
+            print("data already in tree!")
+
+    def _check_balance(self,cur_node,path = []):
+        if cur_node.parent==None: return
+        path = [cur_node] + path
+        # path.append(cur_node)
+        print(path)
+
+        left_height =self.get_height(cur_node.parent.left_child)
+        right_height=self.get_height(cur_node.parent.right_child)
+
+        if abs(left_height-right_height)>1:
+            path = [cur_node.parent] + path
+            self._rebalance_node(path[0],path[1],path[2])
             return
 
-        self._insert(item, self.root)
-        self.size += 1
+        new_height = 1 + cur_node.height 
+        if new_height > cur_node.parent.height:
+            cur_node.parent.height = new_height
 
-    def _insert(self, item, node):
+        self._check_balance(cur_node.parent, path)
 
-        print("item", item, "compared to",node.data)
-        # check if item being inserted is greater than node data
-        if item > node.data:
-            # if right exists move to right node
-            if node.right:
-                self._insert(item, node.right)
-                left_height = node.left.height if node.left else 0
-                right_height = node.right.height if node.right else 0
-                node.height = max(left_height, right_height) + 1
-                self.check_balance(node)
-                #left_height = node.left.height if node.left else 0
-                #right_height = node.right.height if node.right else 0
-                #node.height = max(right_height, left_height) + 1
-            # add new node in empty spot
-            else:
-                node.right = BinaryTreeNode(item)
-                node.height = max(node.height, 1)
+    def _rebalance_node(self, z, y, x):
+        if y == z.left_child and x == y.left_child:
+            self._right_rotate(z)
+        elif y == z.left_child and x == y.right_child:
+            self._left_rotate(y)
+            self._right_rotate(z)
+        elif y == z.right_child and x == y.right_child:
+            self._left_rotate(z)
+        elif y == z.right_child and x == y.left_child:
+            self._right_rotate(y)
+            self._left_rotate(z)
         else:
-            if node.left:
-                self._insert(item, node.left)
-                left_height = node.left.height if node.left else 0
-                right_height = node.right.height if node.right else 0
-                node.height = max(left_height, right_height) + 1
-                self.check_balance(node)
-                #left_height = node.left.height if node.left else 0
-                #right_height = node.right.height if node.right else 0
-                #node.height = max(right_height, left_height) + 1
+            raise Exception('_rebalance_node: z,y,x node configuration not recognized!')
+
+    def _right_rotate(self,z):
+        sub_root = z.parent 
+        y = z.left_child
+        t3 = y.right_child
+        y.right_child = z
+        z.parent = y
+        z.left_child = t3
+        if t3 != None: t3.parent=z
+        y.parent = sub_root
+        if y.parent == None:
+                self.root = y
+        else:
+            if y.parent.left_child == z:
+                y.parent.left_child = y
             else:
-                node.left = BinaryTreeNode(item)
-                node.height = max(node.height, 1)
+                y.parent.right_child = y
+        z.height = 1+max(self.get_height(z.left_child), self.get_height(z.right_child))
+        y.height=1+max(self.get_height(y.left_child), self.get_height(y.right_child))
 
-    def check_balance(self, node):
-
-        left_height = node.left.height if node.left else -1
-        right_height = node.right.height if node.right else -1
-        print("current node:",node)
-        print("current node height", node.height)
-        print("left height",left_height)
-        print("right_height", right_height)
-        # check if right rotaiton is needed
-        if left_height - right_height >= 2:
-            if node.left._find_balance() < 0:
-                pass
-                #left then right
+    def _left_rotate(self,z):
+        sub_root = z.parent 
+        y = z.right_child
+        t2 = y.left_child
+        y.left_child = z
+        z.parent = y
+        z.right_child = t2
+        if t2 != None: t2.parent = z
+        y.parent = sub_root
+        if y.parent == None: 
+            self.root = y
+        else:
+            if y.parent.left_child == z:
+                y.parent.left_child = y
             else:
-                print("rotating left")
-                parent_node = self._find_parent_node_iterative(node.data)
-                child_node = node.left
-                self._rotate_left(parent_node, node, child_node)
-                return
+                y.parent.right_child = y
+        z.height=1+max(self.get_height(z.left_child), self.get_height(z.right_child))
+        y.height=1+max(self.get_height(y.left_child), self.get_height(y.right_child))
 
-        elif left_height - right_height <= -2:
-            print("left height minus right height is less than -2")
-            if node.right._find_balance() > 0:
-                pass
-                # right then left
-            else:
-                print("rotating right")
-                print("node",node)
-                parent_node = self._find_parent_node_iterative(node.data)
-                print("parent", parent_node)
-                child_node = node.right
-                print("child", child_node)
-                self._rotate_right(parent_node, node, child_node)
-                return
-
-    def _rotate_left(self, parent, node, child):
-
-        print("parent:", parent)
-        print("node:", node)
-        print("child:", child)
-        parent.left = child
-        child.right = node
-        node.left = None
-        node.height -= 2
-        return
-
-    def _rotate_right(self, parent, node, child):
-
-        print("function to rotate")
-        print("parent:", parent)
-        print("node:", node)
-        print("child:", child)
-        parent.right = child
-        child.left = node
-        node.right = None
-        node.height -= 2
-        print("parent height:", parent.height)
-        print("node height:", node.height)
-        print("child height:", child.height)
-        return
-
-    def _find_node_iterative(self, item):
-        """Return the node containing the given item in this binary search tree,
-        or None if the given item is not found. Search is performed iteratively
-        starting from the root node."""
-        # Start with the root node
-        node = self.root
-        # Loop until we descend past the closest leaf node
-        while node is not None:
-            #  Check if the given item matches the node's data
-            if item == node.data:
-                # Return the found node
-                return node
-            #  Check if the given item is less than the node's data
-            elif item < node.data:
-                #  Descend to the node's left child
-                node = node.left
-            #  Check if the given item is greater than the node's data
-            elif item > node.data:
-                #  Descend to the node's right child
-                node = node.right
-        # Not found
-        return None
-
-    def _find_node_recursive(self, item, node):
-        """Return the node containing the given item in this binary search tree,
-        or None if the given item is not found. Search is performed recursively
-        starting from the given node (give the root node to start recursion).
-        TODO: Best case running time: ??? under what conditions?
-        TODO: Worst case running time: ??? under what conditions?"""
-        # Check if starting node exists
-        if node is None:
-            return None         # Not found (base case)
-        #  Check if the given item matches the node's data
-        elif item == node.data:
-            # Return the found node
-            return node
-        #  Check if the given item is less than the node's data
-        elif item < node.data:
-            #  Recursively descend to the node's left child, if it exists
-            return self._find_node_recursive(item, node.left)
-        #  Check if the given item is greater than the node's data
-        elif item > node.data:
-            #  Recursively descend to the node's right child, if it exists
-            return self._find_node_recursive(item, node.right)
-
-    def _find_parent_node_iterative(self, item):
-        """Return the parent node of the node containing the given item
-        (or the parent node of where the given item would be if inserted)
-        in this tree, or None if this tree is empty or has only a root node.
-        Search is performed iteratively starting from the root node.
-        TODO: Best case running time: ??? under what conditions?
-        TODO: Worst case running time: ??? under what conditions?"""
-        # Start with the root node and keep track of its parent
-        node = self.root
-        parent = None
-        # Loop until we descend past the closest leaf node
-        while node is not None:
-            #  Check if the given item matches the node's data
-            if item == node.data:
-                # Return the parent of the found node
-                return parent
-            #  Check if the given item is less than the node's data
-            elif item < node.data:
-                #  Update the parent and descend to the node's left child
-                parent = node
-                node = node.left
-            #  Check if the given item is greater than the node's data
-            elif item > node.data:
-                #  Update the parent and descend to the node's right child
-                parent = node
-                node = node.right
-        # Not found
-        return parent
-
-    def _find_parent_node_recursive(self, item, node, parent=None):
-        """Return the parent node of the node containing the given item
-        (or the parent node of where the given item would be if inserted)
-        in this tree, or None if this tree is empty or has only a root node.
-        Search is performed recursively starting from the given node
-        (give the root node to start recursion)."""
-        # Check if starting node exists
-        if node is None:
-            # Not found (base case)
-            return parent
-        #  Check if the given item matches the node's data
-        if item == node.data:
-            # Return the parent of the found node
-            return parent
-        #  Check if the given item is less than the node's data
-        elif item < node.data:
-            #  Recursively descend to the node's left child, if it exists
-            return self._find_parent_node_recursive(item, node.left, node)  # Hint: Remember to update the parent parameter
-        #  Check if the given item is greater than the node's data
-        elif item > node.data:
-            #  Recursively descend to the node's right child, if it exists
-            return self._find_parent_node_recursive(item, node.right, node)   # Hint: Remember to update the parent parameter
-
-    def delete(self, item):
-        """Remove given item from this tree, if present, or raise ValueError.
-        TODO: Best case running time: ??? under what conditions?
-        TODO: Worst case running time: ??? under what conditions?"""
-        # Use helper methods and break this algorithm down into 3 cases
-        # based on how many children the node containing the given item has and
-        # implement new helper methods for subtasks of the more complex cases
-        # item doesnt exist
-        if not self.contains(item):
-            raise ValueError('Given item not in tree')
-
-
-        node = self._find_node_recursive(item, self.root)          # Find Node to be deleted
-
-        parent = self._find_parent_node_recursive(item, node)      # Find Parent of node to delete
-
-        # Node is a leaf
-        if node.is_leaf:
-            node.data = None                                        # Remove data from node
-            if parent.left == node:                                 # If node is left child, remove pointer
-                parent.left = None
-            elif parent.right == node:                              # If node is right child, remove pointer
-                parent.right = None
-
-        # Node to delete has one child
-        if node.left == None or node.right == None:
-            node.data = None                                        # Remove data from node
-            if node == parent.left:                                 # If node is left child, remove pointer
-                if node.left:
-                    parent.left = node.left
-                if node.right:
-                    parent.left = node.right
-            if node == parent.right:
-                if node.left:
-                    parent.right = node.left
-                if node.right:
-                    parent.right = node.right
-
-        # Node to delete has 2 children
-        if node.left != None and node.right != None:
-            successor = node.right
-
-            while successor.is_leaf() == False:
-                successor = successor.left
-
-            successor.left = node.left
-            successor.right = node.right
-
-            if parent:
-                if node == parent.left:                                 # If node is left child, remove pointer
-                    parent.left.data = successor.data
-                if node == parent.right:
-                    parent.right.data = successor.data
-                successor_parent = self._find_parent_node_recursive(successor.data, successor)
-                successor_parent.left = None
-            else:
-                self.root.data = successor.data
+    def get_height(self,cur_node):
+        if cur_node==None: return 0
+        return cur_node.height
 
     def items_in_order(self):
         """Return an in-order list of all items in this binary search tree."""
         items = []
         if not self.is_empty():
             # Traverse tree in-order from root, appending each node's item
-            # self._traverse_in_order_recursive(self.root, items.append)
-            self._traverse_in_order_iterative(self.root, items.append)
+            self._traverse_in_order_recursive(self.root, items.append)
+            # self._traverse_in_order_iterative(self.root, items.append)
         # Return in-order list of all items in tree
         return items
 
@@ -392,48 +189,19 @@ class BinarySearchTree(object):
                         memory usasge is O(n)"""
         #  Traverse left subtree, if it exists
         if node is not None:
-            self._traverse_in_order_recursive(node.left, visit)
+            self._traverse_in_order_recursive(node.left_child, visit)
         #  Visit this node's data with given function
             visit(node.data)
         #  Traverse right subtree, if it exists
-            self._traverse_in_order_recursive(node.right, visit)
-
-
-
-    def _traverse_in_order_iterative(self, node, visit):
-        """Traverse this binary tree with iterative in-order traversal (DFS).
-        Start at the given node and visit each node with the given function.
-        Running time:   O(3n) because each node is called  3 times.
-                        Reduces to O(n)
-        Memory usage:   If tree is balanced, height of tree is approx log(n) and memory
-                        usage is O(log(n))
-                        If Tree is unblanced, height of tree is approx n and
-                        memory usasge is O(n)"""
-        #  Traverse in-order without using recursion (stretch challenge)
-        stack = LinkedStack()
-
-        while True:
-            if node == None:
-                if stack.is_empty():
-                    break
-                pop = stack.pop()
-                visit(pop.data)
-                node = pop.right
-            else:
-                stack.push(node)
-                node = node.left
-
-
-
-
+            self._traverse_in_order_recursive(node.right_child, visit)
 
     def items_pre_order(self):
         """Return a pre-order list of all items in this binary search tree."""
         items = []
         if not self.is_empty():
             # Traverse tree pre-order from root, appending each node's item
-            self._traverse_pre_order_iterative(self.root, items.append)
-            # self._traverse_pre_order_recursive(self.root, items.append)
+            # self._traverse_pre_order_iterative(self.root, items.append)
+            self._traverse_pre_order_recursive(self.root, items.append)
         # Return pre-order list of all items in tree
         return items
 
@@ -453,65 +221,6 @@ class BinarySearchTree(object):
             visit(node.data)                                        #  Visit this node's data with given function
             self._traverse_pre_order_recursive(node.left, visit)    #  Traverse left subtree, if it exists
             self._traverse_pre_order_recursive(node.right, visit)   #  Traverse right subtree, if it exists
-
-    def _traverse_pre_order_iterative(self, node, visit):
-        """Traverse this binary tree with iterative pre-order traversal (DFS).
-        Start at the given node and visit each node with the given function.
-        Running time:   O(3n) because each node is called recursively 3 times.
-                        Reduces to O(n)
-        Memory usage:   If tree is balanced, height of tree is log(n) and memory
-                        usage is O(log(n))
-                        If Tree is unblanced, height of tree is approx n and
-                        memory usasge is O(n)"""
-        #  Traverse pre-order without using recursion (stretch challenge)
-        stack = LinkedStack()
-        stack.push(node)
-        while not stack.is_empty():
-            node = stack.pop()
-            visit(node.data)
-            if node.right:
-                stack.push(node.right)
-            if node.left:
-                stack.push(node.left)
-
-
-    def items_post_order(self):
-        """Return a post-order list of all items in this binary search tree."""
-        items = []
-        items_linked = LinkedList()
-        if not self.is_empty():
-            # Traverse tree post-order from root, appending each node's item
-            # self._traverse_post_order_recursive(self.root, items.append)
-            self._traverse_post_order_iterative(self.root, items_linked.prepend)
-        # Return post-order list of all items in tree
-        # return items
-        return items_linked.items()
-
-    def _traverse_post_order_recursive(self, node, visit):
-        """Traverse this binary tree with recursive post-order traversal (DFS).
-        Start at the given node and visit each node with the given function.
-        TODO: Running time: ??? Why and under what conditions?
-        TODO: Memory usage: ??? Why and under what conditions?"""
-        if node is not None:
-            self._traverse_post_order_recursive(node.left, visit)
-            self._traverse_post_order_recursive(node.right, visit)
-            visit(node.data)
-
-    def _traverse_post_order_iterative(self, node, visit):
-        """Traverse this binary tree with iterative post-order traversal (DFS).
-        Start at the given node and visit each node with the given function.
-         Running time: ??? Why and under what conditions?
-        TODO: Memory usage: ??? Why and under what conditions?"""
-        #  Traverse post-order without using recursion (stretch challenge)
-        stack = LinkedStack()
-        stack.push(node)
-        while not stack.is_empty():
-            node = stack.pop()
-            visit(node.data)
-            if node.left:
-                stack.push(node.left)
-            if node.right:
-                stack.push(node.right)
 
 
     def items_level_order(self):
@@ -541,11 +250,11 @@ class BinarySearchTree(object):
             #  Visit this node's data with given function
             visit(node.data)
             #  Enqueue this node's left child, if it exists
-            if node.left is not None:
-                queue.enqueue(node.left)
+            if node.left_child is not None:
+                queue.enqueue(node.left_child)
             #  Enqueue this node's right child, if it exists
-            if node.right is not None:
-                queue.enqueue(node.right)
+            if node.right_child is not None:
+                queue.enqueue(node.right_child)
 
 
 
@@ -553,19 +262,27 @@ def test_binary_search_tree():
     # Create a complete binary search tree of 3, 7, or 15 items in level-order
     # items = [2, 1, 3]
     # items = [4, 2, 6, 1, 3, 5, 7]
+    items = np.random.randint(1,101,100)
+    
     # items = [8, 4, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15]
     #items = [15,9,20,21,22]
-    items = [15,9,18,6,5]
+    # items = [15,9,18,6,5]
+    # items = [15,9,6]
+    # items = [10, 5, 7]
     # print('items: {}'.format(items))
 
-    tree = BinarySearchTree()
+    tree = AVLSearchTree(items)
+    print(len(items))
+    print(tree)
+    print(tree.root.left_child.height)
+    print(tree.root.right_child.height)
     # print('tree: {}'.format(tree))
     # print('root: {}'.format(tree.root))
 
-    print('\nInserting items:')
-    for item in items:
-        print("inserting",item)
-        tree.insert(item)
+    # print('\nInserting items:')
+    # for item in items:
+    #     print("inserting",item)
+    #     tree.insert(item)
         # print('insert({}), size: {}'.format(item, tree.size))
     # print('root: {}'.format(tree.root))
 
@@ -577,35 +294,11 @@ def test_binary_search_tree():
     # result = tree.search(item)
     # print('search({}): {}'.format(item, result))
 
-    print('\nTraversing items:')
+    # print('\nTraversing items:')
     print('items in-order:    {}'.format(tree.items_in_order()))
     # print('items pre-order:   {}'.format(tree.items_pre_order()))
     # print('items post-order:  {}'.format(tree.items_post_order()))
     print('items level-order: {}'.format(tree.items_level_order()))
-
-    print(tree.root)
-    print(tree.root.left)
-    print(tree.root.right)
-    print(tree.root.left.left)
-    print(tree.root.left.right)
-
-    print(tree.root.height)
-    print(tree.root.left.height)
-    print(tree.root.right.height)
-    print(tree.root.left.left.height)
-    print(tree.root.left.right.height)
-
-    '''print(tree.root)
-    print(tree.root.left)
-    print(tree.root.right)
-    print(tree.root.right.left)
-    print(tree.root.right.right)
-
-    print(tree.root.height)
-    print(tree.root.left.height)
-    print(tree.root.right.height)
-    print(tree.root.right.left.height)
-    print(tree.root.right.right.height)'''
 
 
 if __name__ == '__main__':
