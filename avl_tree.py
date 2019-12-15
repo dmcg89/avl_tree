@@ -89,8 +89,8 @@ class AVLSearchTree(object):
                 self._check_balance(cur_node.right_child)
             else:
                 self._insert(data,cur_node.right_child)
-        else:
-            print("data already in tree!")
+        # else:
+        #     print("data already in tree!")
 
     def _check_balance(self,cur_node,path = []):
         if cur_node.parent==None: return
@@ -131,7 +131,7 @@ class AVLSearchTree(object):
         y.right_child = z
         z.parent = y
         z.left_child = t3
-        if t3: t3.parent=z
+        if t3: t3.parent = z
         y.parent = sub_root
         if y.parent == None:
                 self.root = y
@@ -270,10 +270,10 @@ def test_binary_search_tree():
     # print('items: {}'.format(items))
 
     tree = AVLSearchTree(items)
-    print(len(items))
-    print(tree)
-    print(tree.root.left_child.height)
-    print(tree.root.right_child.height)
+    # print(len(items))
+    # print(tree)
+    print('left subtree height (of root)', tree.root.left_child.height)
+    print('right subtree height (of root)', tree.root.right_child.height)
     # print('tree: {}'.format(tree))
     # print('root: {}'.format(tree.root))
 
